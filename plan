@@ -1,0 +1,143 @@
+TODO:
+	Fix getattr so that LS works
+	Implement utimen for touch?
+	need to implement delete
+	need to implement readdir
+
+
+
+mount() {
+
+	connect to disk
+
+	read vcb
+		check vcb magic
+		check free block is invalid
+		get root DNODE
+
+	get root DNODE 
+		do nothing
+
+	get first DIRENT block (#2)
+		check that it has pointers to . and .., and that they point to blocknum 1
+	
+}
+
+unmount() {
+
+	feature add: metadata about write state
+
+	disconnect disk
+
+}
+
+getattr(pathname, stat *) {
+	feature add: multidirectories
+		require tokenization on pathname /, name, (text)+
+	read pathname
+		if pathname = "/"
+			root dir
+		if path is directory
+			direntry.type = DIRENTRY_DIR
+
+		if file
+			direntry.type = DIRENTRY_FILE
+
+	navigate to path
+		get root dnode, follow until path is found or not found
+
+}
+
+create(path, mode) {
+	for filename in path
+		if( find_file(filename) ) {
+			already exists
+			return -EEXISTS
+		}	
+
+	create inode for file
+	create direntry for inode
+	add direntry to parent dir's dirent
+		iterate through dirents, find direntry with block.valid == 0
+		increment dir's size
+
+}
+return values:
+0: success
+-1: error (directory doesn't exist)
+
+readdir(path, buf, filler, offset) {
+make sure path is /
+find first dirent following given offset
+call filler(buf, filename, NULL, offset of next dirent)
+if that returns nonzero of if no more files, return 0
+otherwise find next file and go back to filler call
+if path != '/':
+    return -1
+//assuming offset is the number of the specific direntry to begin at (0 indexed)
+aaa = direct array element to start at = floor(offset/16)
+bbb = dirent element to start at = offset % 16
+int first_time_flag = 1
+// only supports direct blocks atm
+// for each direct block starting from aaa
+for (int i = aaa; i < 110; i++) {
+    the first time, the offset could matter.
+    other times, we'll want to go through the full 16 elements of dirent array
+    dirent tmp
+    dread(root.direct[i], tmp)
+
+    if first_time_flag:
+        bbb = offset % 16
+        first_time_flag = 0
+    else:
+        bbb = 0
+
+    // iterate through dirents
+    for (int j = bbb; j < 16; j++) {
+        // check validity
+        if (!tmp.entries[j].block.valid) {
+            goto
+        }
+        filename = tmp.entries[j].name
+        next direntry offset = i*16 + j + 1
+        if (filler(buf, filename, NULL, next)) {
+            return 0;
+        }
+    }
+}
+}
+returns:
+0: success
+-1: error
+
+delete(path)
+{
+    //make sure file exists and is a file (not dir)
+
+    if (file_exists(&dir, path))
+        return -1
+
+    //remove file's entry from directory
+    
+    for each direct:
+        for each direntry:
+            if direntry.name == path:
+                blk = direntry.block
+                inode = dread(blk)
+                // free all of the file's data blocks
+                for each of inode's directs:
+                    for each direntry:
+                        release_block(direntry.block.block)
+
+                // free the inode itself
+                release_block(direntry.block.block)
+                
+                // clear the direntry in the dirent
+                direntry blah
+                memset blah
+                entries[i] = blah
+
+    
+
+}
+

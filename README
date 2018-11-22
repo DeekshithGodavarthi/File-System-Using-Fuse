@@ -4,6 +4,16 @@ Schuyler Rosefield && Mark Mossberg, (team correcthorsebatterystaple)
 Northeastern University
 CS 3600: Systems and Networks
 Professor Alan Mislove
+##Commands Used:
+for mounting:
+make -s Makefile
+./3600mkfs <No_of_Blocks_of size_512bytes>
+./3600fs -s -d <mount-point>
+
+for unmounting:
+fusermount -u <mount-point>
+
+<mount-point> - path to empty directory where the file system is supposed to be mounted.
 
 ## Approaches
 
